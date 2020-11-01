@@ -1,6 +1,6 @@
 def bubble_sort(arr)
     index_popped = (0..arr.length-2)
-    done = false
+    done = true
 
     until done do
         done = true
