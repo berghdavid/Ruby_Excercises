@@ -49,6 +49,7 @@ class Tictactoe
                     puts "Square is occupied, try again"
                 end
             else
+                puts "Invalid input...."
                 printInstructions
             end
         end
