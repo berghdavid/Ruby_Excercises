@@ -1,18 +1,80 @@
 class Mastermind
-    attr_reader :code :rounds :curr_round
+    attr_reader :code, :rounds, :curr_round, :available_codes, :available_colors
 
     def initialize
-        @available_codes = {0 => "Red", 1 => "Blue", 2 => "Green", 3 => "White"}
+        @int_to_color = {0 => "red", 1 => "blue", 2 => "green", 3 => "orange", 4 => "yellow", 5 => "pink"}
+        @available_colors = ["red", "blue", "green", "orange", "yellow", "pink"]
         generateCode
         puts "Code generated..."
+        @curr_round = 1
+        @playerScore = 0
+        @compScore = 0
         promptRounds
     end
 
     public def startGame
-        puts "Round #{curr_round}:"
-        puts "Enter the colors which you think is the code:"
-        input = gets.chomp.strip.split(" ")
-        puts input
+        while(curr_round <= rounds)
+            puts "Round #{curr_round}:"
+            input = promptInput
+            puts compare(input)
+            @curr_round += 1
+            displayScore
+        end
+        if(@playerScore > @compScore)
+            puts "You win!"
+        elsif(@playerScore < @compScore)
+            puts "Computer wins!"
+        else
+            puts "Tie!"
+        end
+    end
+
+    private def displayScore
+        puts "Score:"
+        puts "Player: #{@playerScore}"
+        puts "Computer: #{@computerScore}"
+    end
+
+    public def promptInput
+        while (true)
+            puts "Enter your guess of colors:"
+            input = gets.chomp.strip.split(" ")
+            input.each { |word| word.downcase }
+
+            inputIsColors = input.all? { |word| @available_colors.include?(word) }
+            if(inputIsColors && input.size == 4)
+                return input
+                break
+            else
+                puts "Invalid input..."
+            end
+        end
+    end
+
+    private def compare(inputArray)
+        correct_color = 0
+        correct_color_and_place = 0
+        incorrectly_guessed = Array.new(4, nil)
+        missing_code = Array.new(4, nil)
+
+        inputArray.each_with_index do |color, index|
+            if(color == @code[index])
+                correct_color_and_place += 1
+            else
+                incorrectly_guessed[index] = color
+                missing_code[index] = @code[index]
+            end
+        end
+
+        incorrectly_guessed.each_with_index do |color, index|
+            if(color != nil && missing_code.include?(color))
+                correct_color += 1
+                missing_code.delete_at(missing_code.find_index(color))
+            end
+        end
+
+        return "There were #{correct_color_and_place} correct colors AND positions,
+        and #{correct_color} remaining correct colors but in the wrong places."
     end
 
     private def promptRounds
@@ -21,7 +83,6 @@ class Mastermind
             input = Integer(gets.chomp.strip) rescue false
             if(input != 0)
                 @rounds = input
-                @curr_round = 0
                 puts "#{@rounds} rounds selected..."
                 break;
             else
@@ -32,7 +93,7 @@ class Mastermind
 
     private def generateCode
         @code = []
-        4.times { @code.push(rand(4)) }
+        4.times { @code.push(@int_to_color[rand(6)]) }
     end
 end
 
