@@ -9,17 +9,38 @@ class Mastermind
         @curr_round = 1
         @playerScore = 0
         @compScore = 0
+        @attempts = 0
         promptRounds
     end
 
     public def startGame
         while(curr_round <= rounds)
             puts "Round #{curr_round}:"
-            input = promptInput
-            puts compare(input)
-            @curr_round += 1
-            displayScore
+            while(true)
+                input = promptInput
+                rightInputs = compare(input)
+                puts "There were #{rightInputs[0]} correct colors AND positions,"
+                puts "and #{rightInputs[1]} remaining correct colors but in the wrong places."
+
+                if(rightInputs[0] == 4)
+                    @playerScore += 1
+                    @curr_round += 1
+                    displayScore
+                    break
+                elsif(@attempts == 8)
+                    @compScore += 1
+                    attempts = 0
+                    @curr_round += 1
+                    displayScore
+                    break
+                end
+                @attempts += 1
+            end
         end
+        displayWinner
+    end
+
+    private def displayWinner
         if(@playerScore > @compScore)
             puts "You win!"
         elsif(@playerScore < @compScore)
@@ -32,7 +53,7 @@ class Mastermind
     private def displayScore
         puts "Score:"
         puts "Player: #{@playerScore}"
-        puts "Computer: #{@computerScore}"
+        puts "Computer: #{@compScore}"
     end
 
     public def promptInput
@@ -73,6 +94,7 @@ class Mastermind
             end
         end
 
+        return [correct_color_and_place, correct_color]
         return "There were #{correct_color_and_place} correct colors AND positions,
         and #{correct_color} remaining correct colors but in the wrong places."
     end
