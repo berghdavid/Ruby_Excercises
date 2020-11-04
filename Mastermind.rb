@@ -49,7 +49,7 @@ class Mastermind
                     displayScore
                     break
                 elsif(@attempts == @possible_attempts)
-                    puts "The correct code was #{@code}"
+                    puts "Wrong! The correct code was #{@code}"
                     if(@player_is_codebreaker)
                         @compScore += 1
                     else
