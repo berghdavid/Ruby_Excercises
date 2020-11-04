@@ -1,50 +1,80 @@
 class Mastermind
-    attr_reader :code, :rounds, :curr_round, :available_codes, :available_colors
-
     def initialize
         @int_to_color = {0 => "red", 1 => "blue", 2 => "green", 3 => "orange", 4 => "yellow", 5 => "pink"}
         @available_colors = ["red", "blue", "green", "orange", "yellow", "pink"]
+        @curr_round = 1
+        @playerScore = 0
+        @compScore = 0
+        @attempts = 0
+        @code = []
+        @compClues = Array.new(4, nil)
+        @possible_attempts = 8
+
         determineCodebreaker
-        if(!player_is_codebreaker)
-            #playerPromptCode
-        else
-            generateCode
-            puts "Code generated..."
-            @curr_round = 1
-            @playerScore = 0
-            @compScore = 0
-            @attempts = 0
-            promptRounds
-        end
-        
+        promptRounds
+        promptAttempts
     end
 
     public def startGame
-        while(curr_round <= rounds)
-            puts "Round #{curr_round}:"
+        while(@curr_round <= @rounds)
+            puts "Round #{@curr_round} of #{@rounds}:"
+            generateCode
             while(true)
-                input = promptInput
-                rightInputs = compare(input)
-                puts "There were #{rightInputs[0]} correct colors AND positions,"
-                puts "and #{rightInputs[1]} remaining correct colors but in the wrong places."
+                attempts_left = @possible_attempts - @attempts
+                puts "You have #{attempts_left} attempts left!"
 
-                if(rightInputs[0] == 4)
-                    @playerScore += 1
+                if(@player_is_codebreaker)
+                    input = playerPromptInput
+                else
+                    input = compGenerateInput
+                    puts "Your hidden code was #{@code}"
+                end
+
+                right_answers = compare(input)
+                correct_color_and_place = right_answers[0]
+                correct_color = right_answers[1]
+
+                puts "There were #{correct_color_and_place} correct colors AND positions,"
+                puts "and #{correct_color} remaining correct colors but in the wrong places."
+                puts "--------------------------------------"
+
+                @attempts += 1
+                if(correct_color_and_place == 4)
+                    if(@player_is_codebreaker)
+                        @playerScore += 1
+                    else
+                        @compScore += 1
+                    end
                     @curr_round += 1
                     displayScore
                     break
-                elsif(@attempts == 8)
-                    @compScore += 1
-                    attempts = 0
+                elsif(@attempts == @possible_attempts)
+                    puts "The correct code was #{@code}"
+                    if(@player_is_codebreaker)
+                        @compScore += 1
+                    else
+                        @playerScore += 1
+                    end
+                    @attempts = 0
                     @curr_round += 1
                     displayScore
                     break
                 end
-                @attempts += 1
             end
         end
         displayWinner
     end
+
+    private def generateCode
+        if(!@player_is_codebreaker)
+            puts "You are codemaker, make your code for the computer to break"
+            @code = playerPromptInput
+        else
+            @code.clear
+            4.times { @code.push(@int_to_color[rand(6)]) }
+        end
+    end
+
 
     private def displayWinner
         if(@playerScore > @compScore)
@@ -57,14 +87,16 @@ class Mastermind
     end
 
     private def displayScore
-        puts "Score:"
+        puts "========Score========"
         puts "Player: #{@playerScore}"
         puts "Computer: #{@compScore}"
+        puts "====================="
     end
 
-    public def promptInput
+    public def playerPromptInput
         while (true)
-            puts "Enter your guess of colors:"
+            puts "The available colors are #{@available_colors}"
+            puts "Enter your colors:"
             input = gets.chomp.strip.split(" ")
             input.each { |word| word.downcase }
 
@@ -78,6 +110,20 @@ class Mastermind
         end
     end
 
+    public def compGenerateInput
+        compGuess = []
+        4.times { compGuess.push(@int_to_color[rand(6)]) }
+
+        @compClues.each_with_index do |color, index|
+            if(color != nil)
+                compGuess[index] = color
+            end
+        end
+        puts "--------------------------------------"
+        puts "Computer guesses colors #{compGuess}:"
+        return compGuess
+    end
+
     private def compare(inputArray)
         correct_color = 0
         correct_color_and_place = 0
@@ -87,6 +133,7 @@ class Mastermind
         inputArray.each_with_index do |color, index|
             if(color == @code[index])
                 correct_color_and_place += 1
+                @compClues[index] = color
             else
                 incorrectly_guessed[index] = color
                 missing_code[index] = @code[index]
@@ -96,7 +143,10 @@ class Mastermind
         incorrectly_guessed.each_with_index do |color, index|
             if(color != nil && missing_code.include?(color))
                 correct_color += 1
-                missing_code.delete_at(missing_code.find_index(color))
+                index_of_color = missing_code.find_index(color)
+                
+                @compClues[index_of_color] = color
+                missing_code.delete_at(index_of_color)
             end
         end
 
@@ -109,9 +159,23 @@ class Mastermind
         while (true)
             puts "How many rounds do you want to play?"
             input = Integer(gets.chomp.strip) rescue false
-            if(input != 0)
+            if(input != 0 && input.even?)
                 @rounds = input
                 puts "#{@rounds} rounds selected..."
+                break;
+            else
+                puts "Amount of rounds must be an even number"
+            end
+        end
+    end
+
+    private def promptAttempts
+        while (true)
+            puts "How many guesses for each code should be allowed? (Standard is 8)"
+            input = Integer(gets.chomp.strip) rescue false
+            if(input != 0)
+                @possible_attempts = input
+                puts "#{@possible_attempts} guesses selected..."
                 break;
             else
                 puts "Invalid input"
@@ -119,10 +183,6 @@ class Mastermind
         end
     end
 
-    private def generateCode
-        @code = []
-        4.times { @code.push(@int_to_color[rand(6)]) }
-    end
 
     private def determineCodebreaker
         while (true)
