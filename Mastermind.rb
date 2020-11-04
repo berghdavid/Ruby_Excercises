@@ -4,13 +4,19 @@ class Mastermind
     def initialize
         @int_to_color = {0 => "red", 1 => "blue", 2 => "green", 3 => "orange", 4 => "yellow", 5 => "pink"}
         @available_colors = ["red", "blue", "green", "orange", "yellow", "pink"]
-        generateCode
-        puts "Code generated..."
-        @curr_round = 1
-        @playerScore = 0
-        @compScore = 0
-        @attempts = 0
-        promptRounds
+        determineCodebreaker
+        if(!player_is_codebreaker)
+            #playerPromptCode
+        else
+            generateCode
+            puts "Code generated..."
+            @curr_round = 1
+            @playerScore = 0
+            @compScore = 0
+            @attempts = 0
+            promptRounds
+        end
+        
     end
 
     public def startGame
@@ -116,6 +122,24 @@ class Mastermind
     private def generateCode
         @code = []
         4.times { @code.push(@int_to_color[rand(6)]) }
+    end
+
+    private def determineCodebreaker
+        while (true)
+            puts "Do you want to play codebreaker or codebreaker?"
+            puts "1: codebreaker"
+            puts "2: codemaker"
+            input = gets.chomp.strip
+            if(input == "1" || input == "codebreaker")
+                @player_is_codebreaker = true
+                break
+            elsif(input == "2" || input == "codemaker")
+                @player_is_codebreaker = false
+                break
+            else
+                puts "Invalid input"
+            end
+        end
     end
 end
 
